@@ -184,11 +184,17 @@ int AddRec(void) {
     scanf("%s",  tmp_rec.publishing_house);
     __fpurge(stdin);
     printf("Year: ");
-    do 
-    {       
-        scanf("%hu", & tmp_rec.year);
-        __fpurge(stdin);
-    } while (tmp_rec.year < 1);    
+    {
+        time_t theTime = time(NULL);
+        struct tm *aTime = localtime(&theTime);
+
+        int year = aTime->tm_year + 1900;
+        do 
+        {       
+            scanf("%hu", & tmp_rec.year);
+            __fpurge(stdin);
+        } while ((tmp_rec.year < 1 || tmp_rec.year > year) && printf("Enter a valid year!") >= 0);    
+    }
 
     if (g_count == 0) {
         debug("adding first record");
