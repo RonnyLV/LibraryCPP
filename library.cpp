@@ -55,12 +55,14 @@ FILE                   *C_LOG_FILE = fopen("library.log", "a+");
 /**
 *	Function Header declarations
 */
-int ReadDB( void ); 						// Apskatam DB
+int ShowAllRecords( void ); 						// Apskatam DB
 int AddRec( void ); 						// Pievienoshanas funkcija
 int DelRec( void ); 						// Dzeshanas funkcija
 int FindRec( void ); 						// Atlasa pa 1
 int individ ( void ); 						// Individualaa uzdevuma funkcija
 int SaveDB( void ); 						// Saglabashanas funkcija
+
+int ReadDB( void );
 
 int printline(const char *format, ...);
 int debug(const char *format, ...);
@@ -111,7 +113,7 @@ int main( int argc, char** argv ) {
 	{
 		Menu *MyMenu = new Menu;
 		struct MenuLine MenuLines[] = {
-			{"View All Records",&ReadDB},
+			{"View All Records",&ShowAllRecords},
 			{"Add a Record",&AddRec},
 			{"Delete a Record",&DelRec},
 			{"Find a Book By Title",&FindRec},
@@ -128,7 +130,13 @@ int main( int argc, char** argv ) {
 }
 
 /* Datubazes ReadDB */
-int ReadDB(void) {
+int ShowAllRecords( void ){
+    ReadDB();
+    getchar();
+    return EXIT_SUCCESS;
+}
+
+int ReadDB( void ) {
     int i; /* Cikls */
 
     printf("ID");
@@ -145,8 +153,7 @@ int ReadDB(void) {
         printf("\t%hd\n", g_book_rec_pt[i].year);
     }
     printf("-------------------------------------------------------------------\n");
-
-    getchar();
+    
     return EXIT_SUCCESS;
 }
 
@@ -220,8 +227,8 @@ int DelRec(void) {
                 printline("Are You sure You want to delete this record? [Y/n] ");
                 v_yes_no = askForConfirmation();                
                 if(v_yes_no == 1)
-                    if(removeRecord(my_rec))
-                        printline("The record has been successfully removed");                
+                    if(removeRecord(my_rec) == EXIT_SUCCESS)
+                        printline("The record has been successfully removed");
         }
     }
     getchar();
@@ -371,7 +378,7 @@ int removeRecord(int indexToRemove)
 
 int searchElement( size_t offset, /*size_t memb_size,*/ int *target, const char* p_type ){
     static int rec_nr = 0;
-    static unsigned short int v_found = 0;
+    static int v_found = 0;
 
     for (; rec_nr < g_count; rec_nr++) { // Tiek mekletas visas izdevniecibas
         if (
@@ -387,15 +394,21 @@ int searchElement( size_t offset, /*size_t memb_size,*/ int *target, const char*
             printline("Izdevnieciba: %s\n", g_book_rec_pt[rec_nr].publishing_house);
             printline("Gads: %hd\n\n", g_book_rec_pt[rec_nr].year);
             printline("-----\n\n");
-            v_found = 1;
+            v_found++;
             return rec_nr++;
         }
     }
 
-    if(v_found == 0)
+    if(v_found == 0){
         printline("The record could not be found!");
-    else
+    }
+    else{
+        if(v_found == 1)
+            printline("One record totally found.");
+        else
+            printline("%d record totally found.", v_found);
         v_found = 0;
+    }
 
     rec_nr = 0;
     
