@@ -9,6 +9,15 @@
 
 #include "Menu.cpp"
 
+enum DataType
+{
+    INT,
+    FLOAT,
+    STRING,
+    UNSIGNED_SHORT_INT,
+    CHAR,
+};
+
 /*
 --------------
 Ronalds Breikšs P2-4
@@ -70,7 +79,7 @@ int askForConfirmation();                       // Darbības aptsiprināšanas p
 int removeRecord(int indexToRemove);            // Ieraksta dzēšana no masīva
 
                                                 // Ieraksta meklēšana masīvā
-int searchElement( size_t offset, int *target, const char* p_type );
+int searchElement( size_t offset, void *target, DataType p_type );
 /**
 	Main function
 */
@@ -103,9 +112,9 @@ int main( int argc, char** argv ) {
             exit(ERR_MEM_ALLOC());
         }
 
-        //Ielasam ierakstus masīvā    	
+        //Ielasam ierakstus masīvā
     	fread( g_book_rec_pt, sizeof(struct book_rec_type), g_count, g_file); // Tiek nolasiti ieraksti no faila
-        debug("read in records",g_count);            
+        debug("read in records",g_count);
     }
     fclose(g_file); // Aizveram failu
 
@@ -127,7 +136,7 @@ int main( int argc, char** argv ) {
         }
 		else
 			return EXIT_FAILURE;
-	}    
+	}
     free( g_book_rec_pt ); //Atbrīvojam masīva atmiņu
 	return EXIT_SUCCESS;
 }
@@ -163,13 +172,13 @@ int ReadDB( void ) {
             printf("\t%hd\n", g_book_rec_pt[i].year);
         }
         printf("-------------------------------------------------------------------\n");
-        
+
         return EXIT_SUCCESS;
     }
 }
 
 /* Funkcija ierakstu pievienosanai */
-int AddRec(void) {    
+int AddRec(void) {
     book_rec_type tmp_rec;
     debug("adding records");
 
@@ -189,26 +198,26 @@ int AddRec(void) {
         struct tm *aTime = localtime(&theTime);
 
         int year = aTime->tm_year + 1900;
-        do 
-        {       
+        do
+        {
             scanf("%hu", & tmp_rec.year);
             __fpurge(stdin);
-        } while ((tmp_rec.year < 1 || tmp_rec.year > year) && printf("Enter a valid year!") >= 0);    
+        } while ((tmp_rec.year < 1 || tmp_rec.year > year) && printf("Enter a valid year!") >= 0);
     }
 
     if (g_count == 0) {
         debug("adding first record");
-        debug("size of array", sizeof(*g_book_rec_pt));        
+        debug("size of array", sizeof(*g_book_rec_pt));
         g_book_rec_pt = (book_rec_type *) (calloc(++g_count, sizeof(book_rec_type))); //Iedodam vietu pirmajam ierakstam
-    } 
+    }
     else
-    {   
+    {
         // Iedalam vietu jaunajam elementam
         g_book_rec_pt = ( struct book_rec_type * ) realloc(g_book_rec_pt, (++g_count) * sizeof( struct book_rec_type)); // iedalam papildus atmiņu jaunajkam ierakstam
         if ((g_book_rec_pt == NULL)) {
             exit(ERR_MEM_ALLOC());
-        }           
-    }    
+        }
+    }
     g_book_rec_pt[g_count-1] = tmp_rec; // piesaistam jauno ierakstu masīvam
     g_book_rec_pt[g_count-1].id = ++g_max_id; // Inkrementējam ID sekvenci un piesaistam id laukam
 
@@ -216,26 +225,26 @@ int AddRec(void) {
 }
 
 /* Funkcija ierakstu dzesanai */
-int DelRec(void) {        
+int DelRec(void) {
     unsigned short int  inputId; // Lietotāja inputs
 
     if(ReadDB() == EXIT_SUCCESS){ // Izvadam visus ierakstus
-        printline("Enter ID of book you want to delete:"); 
+        printline("Enter ID of book you want to delete:");
         scanf("%hu",&inputId);
     	__fpurge(stdin);
         {
             int my_rec, v_yes_no;;
-            
+
             while(
                 //Ejam cauri visiem atrastajiem ierakstiem (bet vajadzētu būt tikai vienam)
-                (my_rec = 
+                (my_rec =
                     searchElement(  offsetof( struct book_rec_type, id)
                                     //, member_size( struct book_rec_type, id)
-                                    , (int*)&inputId, 
-                                    "USINT" )
+                                    , (int*)&inputId,
+                                    UNSIGNED_SHORT_INT )
                 ) >= 0){
-                    // Prasam vai dzēst ierakstu                
-                    v_yes_no = askForConfirmation();                
+                    // Prasam vai dzēst ierakstu
+                    v_yes_no = askForConfirmation();
                     if(v_yes_no == 1)
                         //Dzēšam ierakstu
                         if(removeRecord(my_rec) == EXIT_SUCCESS)
@@ -254,16 +263,16 @@ int FindRec(void) {
     if(ReadDB() == EXIT_SUCCESS){ // Izvadam visus ierakstus
         printline("Input book's title: ");
         scanf("%s",  inputName);
-    	__fpurge(stdin);        
+    	__fpurge(stdin);
 
         {
             int my_rec;
             while(
                 // Ejam cauri visiem atrastajiem ierakstiem
-                (my_rec = 
+                (my_rec =
                     searchElement(  offsetof( struct book_rec_type, title)
                                     //, member_size( struct book_rec_type, title)
-                                    , (int*)inputName, "CHAR" )
+                                    , (int*)inputName, STRING )
                 ) >= 0){
                     //DARI KKO AR IERAKSTU (:
             }
@@ -274,13 +283,13 @@ int FindRec(void) {
 }
 
 /**
-    Individualais uzdevums - konkretai atrashanai pēc autora 
+    Individualais uzdevums - konkretai atrashanai pēc autora
 */
-int individ(void) {    
+int individ(void) {
     char inputName[20]; //Salīdzināmā vērtīBa
 
     if(ReadDB() == EXIT_SUCCESS){ // Izvadam visus ierakstus
-        printline("Input book's author: ");    
+        printline("Input book's author: ");
         scanf("%s",  inputName);
     	__fpurge(stdin);
 
@@ -288,10 +297,10 @@ int individ(void) {
             int my_rec;
             while(
                 // Meklējam ierakstus, kamēr neatgriež negatīvu skaitli
-                (my_rec = 
+                (my_rec =
                     searchElement(  offsetof( struct book_rec_type, author)
                                     //, member_size( struct book_rec_type, author)
-                                    , (int*)inputName, "CHAR" )
+                                    , (int*)inputName, STRING )
                 ) >= 0){
                     //DARI KKO AR IERAKSTU (:
             }
@@ -310,9 +319,9 @@ int SaveDB(void) {
 
     fwrite( &g_max_id, sizeof(g_max_id), 1, g_file); // Jauno elementu skaitu saglabajam faila
     debug("G_MAX_ID: %d", g_max_id);
-    
-    fwrite( g_book_rec_pt, sizeof(book_rec_type), g_count, g_file); // Ierakstam visus ierakstus no masīva failā    
-    
+
+    fwrite( g_book_rec_pt, sizeof(book_rec_type), g_count, g_file); // Ierakstam visus ierakstus no masīva failā
+
     fclose(g_file); // Aizveram failu
 
     printline("Database has been successfully saved.");
@@ -350,7 +359,7 @@ int debug(const char *format, ...){
     if(C_DEBUG){
         va_start(ap,format);
         fprintf(C_LOG_FILE, "\n");
-        v_return = vfprintf(C_LOG_FILE, format, ap);                
+        v_return = vfprintf(C_LOG_FILE, format, ap);
         va_end(ap);
     }
 
@@ -392,7 +401,7 @@ int askForConfirmation( void ){
 }
 
 int removeRecord(int indexToRemove)
-{        
+{
     memmove(&g_book_rec_pt[indexToRemove], &g_book_rec_pt[indexToRemove+1], (g_count - indexToRemove - 1) * sizeof(book_rec_type)); //Bīdam atmiņas blokus, lai "dzēstu"
     g_count--; //Globālo ierakstu skaitītāju dekrementējam
     //g_book_rec_pt = (book_rec_type *) realloc(g_book_rec_pt,g_count* sizeof(struct book_rec_type));
@@ -407,7 +416,7 @@ int removeRecord(int indexToRemove)
 /**
     Atgriežam -1, ja funkcija ir beigusi savu darbību
 */
-int searchElement( size_t offset, /*size_t memb_size,*/ int *target, const char* p_type ){
+int searchElement( size_t offset, /*size_t memb_size,*/ void *target, DataType p_type ){
     static int rec_nr = 0; //Elementa indexa skaitītājs
     static int v_found = 0; //Atrasto ierakstu skaitītājs
 
@@ -420,12 +429,12 @@ int searchElement( size_t offset, /*size_t memb_size,*/ int *target, const char*
                 "USINT" nozīmē, ka pārbaudāmais elements tiks kāstots kā "unsigned short int"
         */
         if (
-                (p_type == "CHAR" && strcmp(((char*)target), ((char*)((book_rec_type *)&g_book_rec_pt[rec_nr])+offset)) == 0)
+                (p_type == STRING && strcmp(((char*)target), ((char*)((book_rec_type *)&g_book_rec_pt[rec_nr])+offset)) == 0)
                 ||
-                (p_type == "INT" && (((int)(*(int*)((book_rec_type *)&g_book_rec_pt[rec_nr])+offset)) == *target))
+                (p_type == INT && (((int)(*(int*)((book_rec_type *)&g_book_rec_pt[rec_nr])+offset)) == *(int*)target))
                 ||
-                (p_type == "USINT" && (((unsigned short int)(*(int*)((book_rec_type *)&g_book_rec_pt[rec_nr])+offset)) == *(unsigned short int *)target))
-            ) { 
+                (p_type == UNSIGNED_SHORT_INT && (((unsigned short int)(*(int*)((book_rec_type *)&g_book_rec_pt[rec_nr])+offset)) == *(unsigned short int *)target))
+            ) {
             printline("ID: %hd\n", g_book_rec_pt[rec_nr].id);
             printline("Title: %s\n", g_book_rec_pt[rec_nr].title);
             printline("Author: %s\n", g_book_rec_pt[rec_nr].author);
@@ -442,9 +451,9 @@ int searchElement( size_t offset, /*size_t memb_size,*/ int *target, const char*
     }
     //Atrasts tika vismaz 1 ieraksts
     else
-    {        
+    {
         if(v_found == 1) //Ja atrasts tikai viens ieraksts
-            printline("One record totally found.");        
+            printline("One record totally found.");
         else //Atrasti vairāki ieraksti
             printline("%d record totally found.", v_found);
 
@@ -452,6 +461,6 @@ int searchElement( size_t offset, /*size_t memb_size,*/ int *target, const char*
     }
 
     rec_nr = 0; //Resetot ierakstu skaitītāju
-    
+
     return -1;
 }
